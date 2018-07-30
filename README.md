@@ -26,3 +26,10 @@ docker build -t tika-server .
 ### Run
 docker run --rm -d -p 9998:9998 --name tika-server tika-server
 
+### Verify
+curl -X GET http://localhost:9998/tika
+
+**Output should look like**  
+`This is Tika Server (Apache Tika 1.18). Please PUT`  
+
+
