@@ -68,4 +68,4 @@ fi
 FILE_TYPE=`curl -s -X PUT --data-binary @"${INPUT_FILE}" http://${TIKAHOST}:9998/detect/stream`
 
 # Extract the text from the file
-curl -T "${INPUT_FILE}" http://${TIKAHOST}:9998/tika --header "Accept: text/plain"
+curl -s -T "${INPUT_FILE}" http://${TIKAHOST}:9998/tika --header "Accept: text/plain"
