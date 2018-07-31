@@ -20,27 +20,33 @@ OUTPUT_FILE=""
 
 usage() {
 echo "    Usage:"
-echo "      $0 -h"
-echo "      $0 -i INPUT_FILE"
+echo "      $0 -i INPUT_FILE [-o OUTPUT_FILE]"
 echo "      $0 INPUT_FILE"
 }
 
-while getopts "hi:" arg; do 
+while getopts "hi:o" arg; do 
   case $arg in 
     h)
+      #echo "Usage: $0 -i INPUT_FILE [-o OUTPUT_FILE]"
       usage
       exit 1
       ;;
     i)
-      INPUT_FILE="${OPTARG}"
+      INPUT_FILE="$OPTARG"
+      ;;
+    o)
+      OUTPUT_FILE="${OPTARG}"
+      ODIR=`dirname "${OUTPUT_FILE}"`
+      OFILE=`basename "${OUTPUT_FILE}"`
       ;;
     \?)
-      echo "Invalid option: \""${OPTARG}"\" " >&2
-      exit 2
+#      echo "Invalid option: -$OPTARG" >&2
+      echo "Invalid option: $OPTARG" >&2
+      exit 1
       ;;
     :)
       echo "Option -${arg} requires an argument." >&2
-      exit 2
+      exit 1
       ;;
   esac
 done
@@ -56,16 +62,38 @@ case "$#" in
      ;;
 esac
 
+echo "Using INPUT_FILE = \"$INPUT_FILE\""
 
 if [ -e "${INPUT_FILE}" ]; then
   :   # good to go
 else
   echo "ERROR: \""${INPUT_FILE}"\" not found"
-  exit 3
+  exit 2
 fi
+
+if [ -e "${OUTPUT_FILE}" ]; then
+  if [ -w "${OUTPUT_FILE}" ]; then 
+    :
+  else
+    echo "WARN: \""${OUTPUT_FILE}"\" is not writable"
+    echo "WARN: falling back to standard out"
+  fi
+else
+  if [ -d "${ODIR}" ]; then
+    if [ -w "${ODIR}" ]; then 
+      :
+    else
+      echo "WARN: cannot write to \""${ODIR}"\" "
+    fi
+  else
+    echo "WARN: output directory \""${ODIR}"\" does not exist"
+  fi
+fi
+
 
 # Determine the file type to use for extraction
 FILE_TYPE=`curl -s -X PUT --data-binary @"${INPUT_FILE}" http://${TIKAHOST}:9998/detect/stream`
+echo ${FILE_TYPE}
 
 # Extract the text from the file
 curl -s -T "${INPUT_FILE}" http://${TIKAHOST}:9998/tika --header "Accept: text/plain"
